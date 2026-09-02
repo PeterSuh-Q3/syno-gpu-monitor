@@ -12,10 +12,12 @@ chmod 0755 "$WORK/target/bin/amd-gpu-monitor"
 cp "$ROOT/spk/INFO" "$WORK/INFO"
 cp "$ROOT/spk/scripts/"* "$WORK/scripts/"
 chmod 0755 "$WORK/scripts/"*
+cp "$ROOT/spk/PACKAGE_ICON.PNG" "$WORK/PACKAGE_ICON.PNG"
+cp "$ROOT/spk/PACKAGE_ICON_256.PNG" "$WORK/PACKAGE_ICON_256.PNG"
 tar -C "$WORK/target" -czf "$WORK/package.tgz" .
 printf 'extractsize="%s"\n' "$(du -sk "$WORK/target" | awk '{print $1}')" >> "$WORK/INFO"
 printf 'create_time="%s"\n' "$(date +%Y%m%d-%H:%M:%S)" >> "$WORK/INFO"
 printf 'checksum="%s"\n' "$(md5sum "$WORK/package.tgz" | awk '{print $1}')" >> "$WORK/INFO"
 SPK="$OUT/synology-amd-gpu-monitor-0.1.0-x86_64.spk"
-tar -C "$WORK" -cf "$SPK" INFO package.tgz scripts
+tar -C "$WORK" -cf "$SPK" INFO package.tgz scripts PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG
 echo "Built $SPK"
