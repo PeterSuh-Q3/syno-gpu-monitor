@@ -1,0 +1,1 @@
+{"dsm-wrapper.js":{"IntelGpuMonitor.AppInstance":{"type":"app","title":"Intel GPU Monitor","version":"0.1.0","icon":"images/icon_256.png","allowMultiInstance":false,"allUsers":true,"appWindow":"IntelGpuMonitor.AppWindow","depend":["IntelGpuMonitor.AppWindow"]},"IntelGpuMonitor.AppWindow":{"type":"lib","title":"Intel GPU Monitor"}}}

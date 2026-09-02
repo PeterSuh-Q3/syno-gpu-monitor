@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+PKG="synology-intel-gpu-monitor"
+HELPER="/var/packages/$PKG/target/bin/helper/intel-gpu-monitor-helper"
+if [ "${1:-}" != "--root" ]; then
+  [ -u "$HELPER" ] || exit 1
+  exec "$HELPER" postinst
+fi
+mkdir -p /usr/syno/synoman/webman/3rdparty
+ln -sfn "/var/packages/$PKG/target/ui" /usr/syno/synoman/webman/3rdparty/SynoIntelGpuMonitor

@@ -1,0 +1,13 @@
+#!/bin/sh
+set -eu
+PKG="synology-intel-gpu-monitor"
+HELPER="/var/packages/$PKG/target/bin/helper/intel-gpu-monitor-helper"
+if [ "${1:-}" != "--root" ]; then
+  [ -u "$HELPER" ] || exit 1
+  exec "$HELPER" preuninst
+fi
+LINK="/usr/syno/synoman/webman/3rdparty/SynoIntelGpuMonitor"
+TARGET="/var/packages/$PKG/target/ui"
+if [ -L "$LINK" ] && [ "$(readlink "$LINK")" = "$TARGET" ]; then
+  rm -f "$LINK"
+fi
