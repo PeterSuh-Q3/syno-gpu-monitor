@@ -1,2 +1,4 @@
 #!/bin/sh
+mkdir -p /usr/syno/synoman/webman/3rdparty
+ln -sfn /var/packages/synology-amd-gpu-monitor/target/ui /usr/syno/synoman/webman/3rdparty/SynoAmdGpuMonitor
 exit 0

@@ -1,0 +1,1 @@
+require(['/webman/modules/appWindow/AppWindow.js'],function(AppWindow){AppWindow.register({id:'AmdGpuMonitor.AppWindow',title:'AMD GPU Monitor',width:760,height:620,minWidth:520,minHeight:480,url:'/webman/3rdparty/SynoAmdGpuMonitor/index.html'});});
