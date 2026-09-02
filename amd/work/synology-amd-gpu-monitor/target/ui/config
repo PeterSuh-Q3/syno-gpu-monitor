@@ -1,1 +1,0 @@
-{"dsm-wrapper.js":{"AmdGpuMonitor.AppInstance":{"type":"app","title":"AMD GPU Monitor","version":"0.4.2","icon":"images/icon_256.png","allowMultiInstance":false,"allUsers":true,"appWindow":"AmdGpuMonitor.AppWindow","depend":["AmdGpuMonitor.AppWindow"]},"AmdGpuMonitor.AppWindow":{"type":"lib","title":"AMD GPU Monitor"}}}

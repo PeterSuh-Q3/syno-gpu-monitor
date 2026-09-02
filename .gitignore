@@ -1,0 +1,6 @@
+# Reproducible local build outputs; published SPKs belong in GitHub Releases.
+dist/
+amd/dist/
+nvidia/dist/
+amd/work/
+nvidia/work/
