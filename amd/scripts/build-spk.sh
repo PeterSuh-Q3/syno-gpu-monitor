@@ -24,6 +24,6 @@ tar -C "$WORK/target" -czf "$WORK/package.tgz" .
 printf 'extractsize="%s"\n' "$(du -sk "$WORK/target" | awk '{print $1}')" >> "$WORK/INFO"
 printf 'create_time="%s"\n' "$(date +%Y%m%d-%H:%M:%S)" >> "$WORK/INFO"
 printf 'checksum="%s"\n' "$(md5sum "$WORK/package.tgz" | awk '{print $1}')" >> "$WORK/INFO"
-SPK="$OUT/synology-amd-gpu-monitor-0.4.0-x86_64.spk"
+SPK="$OUT/synology-amd-gpu-monitor-0.4.1-x86_64.spk"
 tar -C "$WORK" -cf "$SPK" INFO package.tgz scripts conf PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG
 echo "Built $SPK"

@@ -1,5 +1,5 @@
 package="synology-amd-gpu-monitor"
-version="0.4.0"
+version="0.4.1"
 displayname="Synology AMD GPU Monitor"
 description="Read-only AMD GPU telemetry monitor using DRM sysfs and hwmon."
 arch="x86_64"
