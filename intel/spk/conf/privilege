@@ -2,10 +2,18 @@
   "defaults": {
     "run-as": "package"
   },
-  "tool": [{
-    "relpath": "bin/helper/intel-gpu-monitor-helper",
-    "user": "root",
-    "group": "package",
-    "permission": "6550"
-  }]
+  "tool": [
+    {
+      "relpath": "bin/helper/intel-gpu-monitor-helper",
+      "user": "root",
+      "group": "package",
+      "permission": "6550"
+    },
+    {
+      "relpath": "bin/intel-gpu-monitor",
+      "user": "root",
+      "group": "package",
+      "permission": "6550"
+    }
+  ]
 }

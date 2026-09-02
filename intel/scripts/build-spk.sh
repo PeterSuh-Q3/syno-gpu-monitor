@@ -4,7 +4,7 @@ ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 IMAGE=${SYNOCOMPILER_IMAGE:-dante90/syno-compiler:7.4}
 CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
 PACKAGE=synology-intel-gpu-monitor
-VERSION=0.1.0
+VERSION=0.3.0
 WORK="$ROOT/work/$PACKAGE"
 OUT="$ROOT/dist"
 
