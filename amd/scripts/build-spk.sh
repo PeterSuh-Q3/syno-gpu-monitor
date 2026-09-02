@@ -16,6 +16,7 @@ cp "$ROOT/spk/scripts/"* "$WORK/scripts/"
 chmod 0755 "$WORK/scripts/"*
 cp "$ROOT/spk/conf/privilege" "$WORK/conf/privilege"
 cp "$ROOT/spk/webui/"* "$WORK/target/ui/"
+chmod 0755 "$WORK/target/ui/api.cgi"
 cp "$ROOT/spk/PACKAGE_ICON_256.PNG" "$WORK/target/ui/images/icon_256.png"
 cp "$ROOT/spk/PACKAGE_ICON.PNG" "$WORK/PACKAGE_ICON.PNG"
 cp "$ROOT/spk/PACKAGE_ICON_256.PNG" "$WORK/PACKAGE_ICON_256.PNG"
