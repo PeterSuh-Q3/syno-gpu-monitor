@@ -1,4 +1,5 @@
 # Intel GPU Monitor
 
-Reserved for a future Intel iGPU implementation using DRM sysfs and
-`intel_gpu_top`-independent telemetry where available.
+Intel iGPU monitor implementation space for Synology DSM.
+
+See [the design document](docs/intel-gpu-monitor-design.md).
