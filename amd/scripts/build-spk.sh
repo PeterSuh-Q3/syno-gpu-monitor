@@ -6,9 +6,11 @@ CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
 WORK="$ROOT/work/synology-amd-gpu-monitor"
 OUT="$ROOT/dist"
 rm -rf "$WORK"
-mkdir -p "$WORK/target/bin" "$WORK/target/ui/images" "$WORK/scripts" "$WORK/conf" "$OUT"
+mkdir -p "$WORK/target/bin/helper" "$WORK/target/ui/images" "$WORK/scripts" "$WORK/conf" "$OUT"
 docker run --rm --platform linux/amd64 --entrypoint /bin/bash -u 0 -v "$ROOT:/work" -w /work "$IMAGE" -lc "'$CC' -O2 -s -Wall -Wextra -Werror -o /work/work/synology-amd-gpu-monitor/target/bin/amd-gpu-monitor /work/src/amd-gpu-monitor.c"
+docker run --rm --platform linux/amd64 --entrypoint /bin/bash -u 0 -v "$ROOT:/work" -w /work "$IMAGE" -lc "'$CC' -O2 -s -Wall -Wextra -Werror -o /work/work/synology-amd-gpu-monitor/target/bin/helper/amd-gpu-monitor-helper /work/src/amd-gpu-monitor-helper.c"
 chmod 0755 "$WORK/target/bin/amd-gpu-monitor"
+chmod 0550 "$WORK/target/bin/helper/amd-gpu-monitor-helper"
 cp "$ROOT/spk/INFO" "$WORK/INFO"
 cp "$ROOT/spk/scripts/"* "$WORK/scripts/"
 chmod 0755 "$WORK/scripts/"*

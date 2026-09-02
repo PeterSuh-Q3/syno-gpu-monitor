@@ -1,4 +1,10 @@
 #!/bin/sh
+set -eu
+if [ "${1:-}" != "--root" ]; then
+  HELPER="/var/packages/synology-amd-gpu-monitor/target/bin/helper/amd-gpu-monitor-helper"
+  [ -u "$HELPER" ] || exit 1
+  exec "$HELPER" postinst
+fi
 mkdir -p /usr/syno/synoman/webman/3rdparty
 ln -sfn /var/packages/synology-amd-gpu-monitor/target/ui /usr/syno/synoman/webman/3rdparty/SynoAmdGpuMonitor
 exit 0
