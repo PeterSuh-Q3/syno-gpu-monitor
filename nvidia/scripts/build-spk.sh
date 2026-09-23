@@ -2,7 +2,7 @@
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 PACKAGE=syno-nvidia-gpu-monitor
-VERSION=0.6.3
+VERSION=0.6.4
 PLATFORM=x86_64
 IMAGE=${SYNOCOMPILER_IMAGE:-dante90/syno-compiler:7.4}
 CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
@@ -25,6 +25,8 @@ cp "$ROOT/../common/webui/gpu-console.css" "$WORK/target/ui/"
 cp "$ROOT/../common/webui/gpu-console.js" "$WORK/target/ui/"
 cp "$ROOT/../common/console/console-control.sh" "$WORK/target/console/"
 cp "$ROOT/../common/console/route.conf.template" "$WORK/target/console/"
+cp "$ROOT/monitor-spk/src/nvidia-smi-console.sh" "$WORK/target/console/"
+chmod 0755 "$WORK/target/console/nvidia-smi-console.sh"
 sed -e 's/@PACKAGE@/syno-nvidia-gpu-monitor/g' -e 's/@BASE_PATH@/nvidia-gpu-console/g' -e 's/@PORT@/17681/g' "$WORK/target/console/route.conf.template" > "$WORK/target/console/nvidia-console.conf"
 cp /Users/yousuk/mshell-manager/src/bin/ttyd "$WORK/target/bin/ttyd"
 chmod 0755 "$WORK/target/bin/ttyd" "$WORK/target/console/console-control.sh"

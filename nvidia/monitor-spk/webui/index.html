@@ -21,8 +21,8 @@
     .detail { margin-top: 5px; color: #64748b; font-size: 11px; }
     canvas { display: block; width: 100%; height: 32px; margin-top: 8px; }
     .source { margin: 0 0 12px; color: #64748b; font-size: 11px; }
-    .console { margin-top: 14px; padding: 13px; border: 1px solid #dbe2ea; border-radius: 10px; background: #111827; color: #86efac; overflow: auto; }
-    pre { margin: 0; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+    .console { margin-top: 14px; padding: 8px; border: 1px solid #dbe2ea; border-radius: 10px; background: #111827; overflow: hidden; }
+    .console iframe { display: block; width: 100%; height: 560px; border: 0; background: #000; }
     .hidden { display: none; }
     .error { padding: 20px; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c; background: #fef2f2; }
     @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
@@ -43,8 +43,7 @@
   <header class="gpu-header"><span class="gpu-icon">🖼️</span><div class="gpu-name" id="gpu-name">NVIDIA GPU</div></header>
   <p class="source" id="source">Loading NVIDIA telemetry…</p>
   <section class="grid" id="cards"></section>
-  <section class="console hidden" id="console"><pre id="console-output"></pre></section>
-  <script src="syno-auth-shim.js?v=__PKG_VERSION__"></script>
+  <section class="console hidden" id="console"><iframe id="console-frame" title="NVIDIA Console"></iframe><div class="error hidden" id="console-error"></div></section>
   <script>
     const fields = [
       ['gpu_utilization', 'GPU Utilization', '%', true],
@@ -61,7 +60,8 @@
     const source = document.getElementById('source');
     const gpuName = document.getElementById('gpu-name');
     const consolePanel = document.getElementById('console');
-    const consoleOutput = document.getElementById('console-output');
+    const consoleFrame = document.getElementById('console-frame');
+    const consoleError = document.getElementById('console-error');
 
     function number(value) {
       const parsed = Number(value);
@@ -129,7 +129,6 @@
         return `<article class="card"><div class="label">${label}</div><div class="value">${display(value, unit)}</div><div class="detail">${detail}</div>${chart ? `<canvas data-key="${key}"></canvas>` : ''}</article>`;
       }).join('');
       cards.querySelectorAll('canvas').forEach(canvas => graph(canvas, canvas.dataset.key));
-      consoleOutput.textContent = data.output || '';
     }
     async function refresh() {
       try {
@@ -143,7 +142,29 @@
       }
     }
     document.getElementById('refresh').addEventListener('click', refresh);
-    document.getElementById('console-toggle').addEventListener('change', event => consolePanel.classList.toggle('hidden', !event.target.checked));
+    async function setConsole(enabled) {
+      consoleError.textContent = '';
+      consoleError.classList.add('hidden');
+      try {
+        const response = await fetch('./console.cgi?action=' + (enabled ? 'start' : 'stop'), { cache: 'no-store', credentials: 'same-origin' });
+        const result = await response.json();
+        if (!result.success) throw new Error(result.error || 'Failed to control NVIDIA Console');
+        if (enabled) {
+          consoleFrame.src = '/webman/3rdparty/syno-nvidia-gpu-monitor/nvidia-gpu-console/';
+          consolePanel.classList.remove('hidden');
+        } else {
+          consoleFrame.removeAttribute('src');
+          consolePanel.classList.add('hidden');
+        }
+      } catch (error) {
+        const toggle = document.getElementById('console-toggle');
+        toggle.checked = false;
+        consolePanel.classList.remove('hidden');
+        consoleError.textContent = error.message;
+        consoleError.classList.remove('hidden');
+      }
+    }
+    document.getElementById('console-toggle').addEventListener('change', event => setConsole(event.target.checked));
     function syncTheme() {
       try {
         document.documentElement.classList.toggle('dark', window.parent.document.documentElement.classList.contains('dark'));

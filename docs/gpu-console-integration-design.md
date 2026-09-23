@@ -56,9 +56,9 @@ this design.
   libraries; do not rebuild it as part of every monitor UI change.
 - Intel: reuse the verified `syno-intel-gpu-top` runtime archive, including
   `intel_gpu_top.real` and its private libpci/libudev dependencies.
-- NVIDIA: invoke the installed driver’s `nvidia-smi`; it is tied to the
-  installed NVML/driver version and must not be bundled from an unrelated
-  release.
+- NVIDIA: invoke the installed driver’s `nvidia-smi` through a package-owned
+  `nvidia-smi -l 1` wrapper; it is tied to the installed NVML/driver version
+  and must not be bundled from an unrelated release.
 - `ttyd`: copy the tested MSHELL Manager binary for the supported DSM
   x86_64 baseline and record its SHA-256 in the build manifest.
 
