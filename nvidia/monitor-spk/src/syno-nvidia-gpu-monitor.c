@@ -6,6 +6,7 @@
  * independent from a particular NVIDIA driver build at compile time.
  */
 #include <dlfcn.h>
+#include <ctype.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
@@ -37,6 +38,7 @@ typedef nvmlReturn_t (*nvmlDeviceGetFanSpeed_fn)(nvmlDevice_t, unsigned int *);
 typedef nvmlReturn_t (*nvmlDeviceGetClockInfo_fn)(nvmlDevice_t, unsigned int, unsigned int *);
 typedef nvmlReturn_t (*nvmlDeviceGetEncoderUtilization_fn)(nvmlDevice_t, unsigned int *, unsigned int *);
 typedef nvmlReturn_t (*nvmlDeviceGetDecoderUtilization_fn)(nvmlDevice_t, unsigned int *, unsigned int *);
+typedef nvmlReturn_t (*nvmlDeviceGetName_fn)(nvmlDevice_t, char *, unsigned int);
 
 struct nvml_api {
     void *handle;
@@ -51,6 +53,7 @@ struct nvml_api {
     nvmlDeviceGetClockInfo_fn clock;
     nvmlDeviceGetEncoderUtilization_fn encoder;
     nvmlDeviceGetDecoderUtilization_fn decoder;
+    nvmlDeviceGetName_fn name;
 };
 
 static int load_nvml(struct nvml_api *api) {
@@ -79,6 +82,7 @@ static int load_nvml(struct nvml_api *api) {
     api->clock = (nvmlDeviceGetClockInfo_fn)dlsym(api->handle, "nvmlDeviceGetClockInfo");
     api->encoder = (nvmlDeviceGetEncoderUtilization_fn)dlsym(api->handle, "nvmlDeviceGetEncoderUtilization");
     api->decoder = (nvmlDeviceGetDecoderUtilization_fn)dlsym(api->handle, "nvmlDeviceGetDecoderUtilization");
+    api->name = (nvmlDeviceGetName_fn)dlsym(api->handle, "nvmlDeviceGetName");
     if (api->init == NULL || api->shutdown == NULL || api->count == NULL ||
         api->device == NULL || api->utilization == NULL || api->memory == NULL) {
         dlclose(api->handle);
@@ -97,6 +101,7 @@ int main(int argc, char **argv) {
     unsigned long long total_kib, used_kib, free_kib;
     unsigned int memory_percent;
     unsigned int temperature = 0, fan = 0, gpu_clock = 0, memory_clock = 0, sample = 0;
+    char name[128] = "NVIDIA GPU";
     int check_only = 0;
     int rc = 1;
 
@@ -138,7 +143,14 @@ int main(int argc, char **argv) {
     if (api.encoder) (void)api.encoder(device, &utilization.encoder, &sample);
     sample = 0;
     if (api.decoder) (void)api.decoder(device, &utilization.decoder, &sample);
-    printf("{\"device\":\"Gpu\",\"gpu_utilization\":%u,\"encoder_utilization\":%u,"
+    if (api.name) (void)api.name(device, name, sizeof(name));
+    name[sizeof(name) - 1] = '\0';
+    printf("{\"device\":\"Gpu\",\"name\":\"");
+    for (size_t i = 0; name[i] != '\0'; ++i) {
+        unsigned char ch = (unsigned char)name[i];
+        putchar(isalnum(ch) || ch == ' ' || ch == '-' || ch == '_' ? ch : '_');
+    }
+    printf("\",\"gpu_utilization\":%u,\"encoder_utilization\":%u,"
            "\"decoder_utilization\":%u,\"gpu_memory_total\":%llu,\"gpu_memory_used\":%llu,"
            "\"gpu_memory_free\":%llu,\"gpu_memory_utilization\":%u,\"temperature_c\":%u,"
            "\"fan_speed\":%u,\"gpu_clock_mhz\":%u,\"memory_clock_mhz\":%u}\n",
