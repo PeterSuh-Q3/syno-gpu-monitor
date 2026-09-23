@@ -36,22 +36,41 @@
     var placeholder = root.querySelector('.gpu-console-placeholder');
     var frame = root.querySelector('.gpu-console-frame');
     var error = root.querySelector('.gpu-console-error');
+    var synoTokenPromise;
+    function getSynoToken() {
+      if (!synoTokenPromise) {
+        synoTokenPromise = fetch('/webman/login.cgi', { credentials: 'same-origin' })
+          .then(function (response) { return response.json(); })
+          .then(function (data) { return data.SynoToken || ''; })
+          .catch(function () { return ''; });
+      }
+      return synoTokenPromise;
+    }
     function showError(message) { error.textContent = message; error.classList.remove('gpu-console-hidden'); }
     function clearError() { error.textContent = ''; error.classList.add('gpu-console-hidden'); }
     function request(action) {
-      return fetch(actionUrl + '?action=' + encodeURIComponent(action), { cache:'no-store', credentials:'same-origin' })
-        .then(function (response) { return response.json(); });
+      return getSynoToken().then(function (token) {
+        return fetch(actionUrl + '?action=' + encodeURIComponent(action), {
+          cache:'no-store', credentials:'same-origin',
+          headers: token ? { 'X-SYNO-TOKEN': token } : {}
+        });
+      }).then(function (response) { return response.json(); });
     }
     checkbox.addEventListener('change', function () {
       var enabled = checkbox.checked;
       clearError();
       request(enabled ? 'start' : 'stop').then(function (result) {
         if (!result.success) throw new Error(result.error || 'Console request failed');
-        if (enabled) { frame.src = consoleUrl; frame.classList.remove('gpu-console-hidden'); placeholder.classList.add('gpu-console-hidden'); }
+        if (enabled) {
+          if (!result.url || result.url.indexOf(consoleUrl) !== 0) throw new Error('Console URL is unavailable');
+          frame.src = result.url;
+          frame.classList.remove('gpu-console-hidden'); placeholder.classList.add('gpu-console-hidden');
+        }
         else { frame.removeAttribute('src'); frame.classList.add('gpu-console-hidden'); placeholder.classList.remove('gpu-console-hidden'); }
       }).catch(function (err) { checkbox.checked = false; showError(err.message); });
     });
-    root.prepend(toggle);
+    if (options.toggleTarget) options.toggleTarget.appendChild(toggle);
+    else root.prepend(toggle);
     return { root: root, toggle: toggle, stop: function () { checkbox.checked = false; return request('stop'); } };
   }
   global.GPUConsole = { mount: mount };

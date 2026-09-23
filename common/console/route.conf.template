@@ -1,10 +1,12 @@
 # Substitute @BASE_PATH@, @PORT@, and @PACKAGE@ at package installation time.
-location = /webman/3rdparty/@PACKAGE@/@BASE_PATH@ {
-    return 301 /webman/3rdparty/@PACKAGE@/@BASE_PATH@/;
+location = /webman/3rdparty/@PACKAGE@/@BASE_PATH@/@TOKEN@ {
+    return 301 /webman/3rdparty/@PACKAGE@/@BASE_PATH@/@TOKEN@/;
 }
 
-location ^~ /webman/3rdparty/@PACKAGE@/@BASE_PATH@/ {
-    proxy_pass http://localhost:@PORT@/@BASE_PATH@/;
+location ^~ /webman/3rdparty/@PACKAGE@/@BASE_PATH@/@TOKEN@/ {
+    add_header Cache-Control "no-store" always;
+    add_header Referrer-Policy "no-referrer" always;
+    proxy_pass http://127.0.0.1:@PORT@/@BASE_PATH@/@TOKEN@/;
     proxy_http_version 1.1;
     proxy_set_header Upgrade $http_upgrade;
     proxy_set_header Connection "upgrade";

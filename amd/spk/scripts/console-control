@@ -1,0 +1,15 @@
+#!/bin/sh
+set -eu
+PKG=/var/packages/synology-amd-gpu-monitor
+export GPU_CONSOLE_PKG_ROOT="$PKG"
+export GPU_CONSOLE_TTYD="$PKG/scripts/console-runtime/ttyd"
+export GPU_CONSOLE_COMMAND="$PKG/scripts/console-runtime/run-top"
+export GPU_CONSOLE_PORT=17684
+export GPU_CONSOLE_BASE_PATH=/amdgpu-console
+export GPU_CONSOLE_NGINX_LINK=/etc/nginx/conf.d/dsm.pkg-3rdparty.synology-amd-gpu-monitor-console.conf
+export GPU_CONSOLE_NGINX_TEMPLATE="$PKG/scripts/route.conf"
+export GPU_CONSOLE_NGINX_CONF=/run/synology-amd-gpu-monitor-route.conf
+export GPU_CONSOLE_TOKENFILE=/run/synology-amd-gpu-monitor-console.token
+export GPU_CONSOLE_PUBLIC_BASE=/webman/3rdparty/SynoAmdGpuMonitor/amdgpu-console
+export GPU_CONSOLE_PIDFILE=/run/synology-amd-gpu-monitor-ttyd.pid
+exec /bin/sh "$PKG/scripts/console-engine" "${1:-}"

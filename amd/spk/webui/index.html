@@ -1,1 +1,104 @@
-<!doctype html><html><head><meta charset="utf-8"><title>AMD GPU Monitor</title><style>body{font:14px sans-serif;background:radial-gradient(circle at 85% 5%,#552333 0,#1c233b 38%,#121827 100%);color:#f1f3f6;padding:18px;min-height:100vh}.header{display:flex;align-items:center;gap:12px;margin:0 0 18px}.header img{width:42px;height:42px;border-radius:10px;box-shadow:0 3px 15px #ff3f554d}.header h2{margin:0;font-size:23px;letter-spacing:.2px}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.card{background:linear-gradient(145deg,#2b344cdd,#20283ddd);border:1px solid #ffffff12;border-radius:12px;padding:16px;min-height:112px;box-shadow:0 8px 20px #0004}.name{color:#bdc5d5}.value{color:#ff5765;font-size:25px;font-weight:bold;margin:7px 0}svg{width:100%;height:42px}polyline{fill:none;stroke:#ff5b68;stroke-width:2}</style></head><body><div class="header"><img src="images/icon_256.png" alt="AMD GPU Monitor"><h2>AMD GPU Monitor</h2></div><div class="grid" id="cards"></div><script>const history=[],samples=[];function val(x,u){return x<0?'Unavailable':x+u}function graph(){const a=Array(50).fill(0),h=history.slice(-50);h.forEach((v,i)=>a[50-h.length+i]=v);return '<svg viewBox="0 0 500 100" preserveAspectRatio="none"><polyline points="'+a.map((v,i)=>i*10+','+(100-v)).join(' ')+'"/></svg>'}function draw(){fetch('./api.cgi').then(r=>r.json()).then(d=>{let gpu=Number(d.gpu_utilization);if(gpu>=0){samples.push(gpu);if(samples.length>10)samples.shift();history.push(gpu);if(history.length>50)history.shift()}let avg=samples.length?Math.round(samples.reduce((a,b)=>a+b,0)/samples.length):-1;let items=[['GPU Utilization',val(avg,'%'),graph()],['Temperature',val(d.temperature_c,' °C'),''],['Fan Speed',val(d.fan_rpm,' RPM'),''],['GPU Clock',val(d.gpu_clock_mhz,' MHz'),''],['Memory Clock',val(d.memory_clock_mhz,' MHz'),''],['Power',val(d.power_w,' W'),'']];document.getElementById('cards').innerHTML=items.map(x=>'<div class="card"><div class="name">'+x[0]+'</div><div class="value">'+x[1]+'</div>'+x[2]+'</div>').join('')})}draw();setInterval(draw,5000)</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AMD GPU Monitor</title>
+  <link rel="stylesheet" href="gpu-console.css">
+  <style>
+    :root { color-scheme: light; }
+    :root.dark { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; padding: 24px; font: 13px system-ui,sans-serif; color: #1f2937; background: #f9fafb; }
+    .toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 14px; }
+    button { border: 1px solid #2563eb; border-radius: 7px; padding: 7px 12px; color: #2563eb; background: transparent; font: inherit; font-weight: 600; cursor: pointer; }
+    .dashboard { display: grid; grid-template-columns: minmax(280px,3fr) minmax(680px,7fr); gap: 14px; align-items: start; }
+    .gpu-column { min-width: 0; }
+    .gpu-header { display: flex; align-items: center; gap: 11px; margin-bottom: 8px; }
+    .gpu-icon { font-size: 34px; line-height: 1; }
+    .gpu-name { color: #0f172a; font-size: 20px; font-weight: 700; }
+    .source { margin: 0 0 12px; color: #64748b; font-size: 11px; }
+    .grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+    .card { min-height: 72px; padding: 7px; border: 1px solid #f4d36d; border-radius: 8px; background: #fff8d9; }
+    .label { color: #64748b; font-size: 9px; }
+    .value { margin-top: 4px; color: #0f172a; font-size: 14px; font-weight: 650; }
+    .detail { min-height: 11px; margin-top: 3px; color: #64748b; font-size: 9px; }
+    canvas { display: block; width: 100%; height: 20px; margin-top: 5px; }
+    .dashboard .gpu-console-panel { margin-top: 0; }
+    .dashboard .gpu-console-frame, .dashboard .gpu-console-placeholder { height: 700px; min-height: 700px; }
+    .error { padding: 13px; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c; background: #fef2f2; }
+    @media (max-width: 980px) { .dashboard { grid-template-columns: 1fr; } .dashboard .gpu-console-frame, .dashboard .gpu-console-placeholder { height: 420px; min-height: 420px; } }
+    @media (max-width: 560px) { .grid { grid-template-columns: 1fr; } }
+    .dark body { color: #e5e7eb; background: #111827; }
+    .dark .gpu-name, .dark .value { color: #f9fafb; }
+    .dark .card { border-color: #8a6d1d; background: #4a3b09; }
+    .dark .label, .dark .detail, .dark .source { color: #9ca3af; }
+  </style>
+</head>
+<body>
+  <div class="toolbar"><label><input id="auto" type="checkbox" checked> Auto-refresh</label><button id="refresh" type="button">🔄 Refresh</button><span id="console-toggle-host"></span></div>
+  <div class="dashboard"><main class="gpu-column"><header class="gpu-header"><span class="gpu-icon">🔴</span><div class="gpu-name">AMD GPU</div></header><p class="source">AMD DRM telemetry · 5-second refresh</p><section class="grid" id="cards"></section></main><aside id="console-host"></aside></div>
+  <script src="gpu-console.js"></script>
+  <script>
+    const cards = document.getElementById('cards');
+    const samples = [];
+    const history = [];
+    const consoleController = GPUConsole.mount({
+      actionUrl: './console.cgi', consoleUrl: '/webman/3rdparty/SynoAmdGpuMonitor/amdgpu-console/', title: 'AMDGPU Console',
+      toggleTarget: document.getElementById('console-toggle-host')
+    });
+    document.getElementById('console-host').appendChild(consoleController.root);
+    function number(value) { const parsed = Number(value); return Number.isFinite(parsed) && parsed >= 0 ? parsed : null; }
+    function display(value, unit) { return value === null ? 'N/A' : `${value} ${unit}`; }
+    function chart(canvas) {
+      const context = canvas.getContext('2d');
+      const width = canvas.width = canvas.clientWidth * 2;
+      const height = canvas.height = canvas.clientHeight * 2;
+      context.clearRect(0, 0, width, height);
+      context.strokeStyle = '#35d0ff'; context.lineWidth = 2; context.beginPath();
+      history.forEach((value, index) => {
+        const x = (50 - history.length + index) * width / 49;
+        const y = height - Math.min(100, value) / 100 * height;
+        if (index) context.lineTo(x, y); else context.moveTo(x, y);
+      });
+      context.stroke();
+    }
+    function render(data) {
+      const raw = number(data.gpu_utilization);
+      if (raw !== null) {
+        samples.push(raw); if (samples.length > 10) samples.shift();
+        history.push(raw); if (history.length > 50) history.shift();
+      }
+      const average = samples.length ? Math.round(samples.reduce((sum, value) => sum + value, 0) / samples.length) : null;
+      const used = number(data.vram_used_mib), total = number(data.vram_total_mib);
+      const metrics = [
+        ['GPU Utilization', average, '%', '', true],
+        ['VRAM Usage', used, 'MiB', total === null ? '' : `/ ${total} MiB`, false],
+        ['GPU Temperature', number(data.temperature_c), '°C', '', false],
+        ['Fan Speed', number(data.fan_rpm), 'RPM', '', false],
+        ['GPU Clock', number(data.gpu_clock_mhz), 'MHz', '', false],
+        ['Memory Clock', number(data.memory_clock_mhz), 'MHz', '', false],
+        ['Power Draw', number(data.power_w), 'W', '', false]
+      ];
+      cards.innerHTML = metrics.map(([label, value, unit, detail, graph]) =>
+        `<article class="card"><div class="label">${label}</div><div class="value">${display(value, unit)}</div><div class="detail">${detail}</div>${graph ? '<canvas></canvas>' : ''}</article>`
+      ).join('');
+      const canvas = cards.querySelector('canvas'); if (canvas) chart(canvas);
+    }
+    async function refresh() {
+      try {
+        const response = await fetch('./api.cgi', { cache: 'no-store', credentials: 'same-origin' });
+        const data = await response.json();
+        if (data.vendor !== 'AMD' || data.available === false) throw new Error(data.reason || 'AMD GPU telemetry is unavailable');
+        render(data);
+      } catch (error) {
+        cards.textContent = `Failed to load AMD GPU telemetry: ${error.message}`;
+      }
+    }
+    document.getElementById('refresh').addEventListener('click', refresh);
+    function syncTheme() { try { document.documentElement.classList.toggle('dark', window.parent.document.documentElement.classList.contains('dark')); } catch (_) {} }
+    syncTheme(); try { new MutationObserver(syncTheme).observe(window.parent.document.documentElement, {attributes:true,attributeFilter:['class']}); } catch (_) {}
+    refresh(); setInterval(() => { if (document.getElementById('auto').checked) refresh(); }, 5000);
+  </script>
+</body>
+</html>

@@ -1,0 +1,5 @@
+#!/bin/sh
+set -eu
+RUNTIME=/var/packages/synology-intel-gpu-monitor/scripts/console-runtime/intel
+export LD_LIBRARY_PATH="$RUNTIME/lib"
+exec "$RUNTIME/bin/intel_gpu_top.real"

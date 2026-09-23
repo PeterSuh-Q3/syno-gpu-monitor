@@ -3,11 +3,18 @@
 #include <unistd.h>
 
 int main(int argc, char **argv) {
-  if (argc != 2 || strcmp(argv[1], "postinst") != 0) {
-    fputs("invalid action\n", stderr); return 1;
-  }
+  const char *script;
+  const char *action = NULL;
+  char *const clean_env[] = {"PATH=/usr/sbin:/usr/bin:/sbin:/bin", "HOME=/", NULL};
+  if (argc != 2) return 1;
+  if (strcmp(argv[1], "postinst") == 0) script = "/var/packages/synology-amd-gpu-monitor/scripts/postinst";
+  else if (strcmp(argv[1], "preuninst") == 0) script = "/var/packages/synology-amd-gpu-monitor/scripts/preuninst";
+  else if (strcmp(argv[1], "console-start") == 0) { script = "/var/packages/synology-amd-gpu-monitor/scripts/console-control"; action = "start"; }
+  else if (strcmp(argv[1], "console-stop") == 0) { script = "/var/packages/synology-amd-gpu-monitor/scripts/console-control"; action = "stop"; }
+  else if (strcmp(argv[1], "console-status") == 0) { script = "/var/packages/synology-amd-gpu-monitor/scripts/console-control"; action = "status"; }
+  else { fputs("invalid action\n", stderr); return 1; }
   if (setuid(0) != 0) return 1;
-  execl("/var/packages/synology-amd-gpu-monitor/scripts/postinst",
-        "postinst", "--root", (char *)0);
+  if (action != NULL) execle(script, script, action, (char *)NULL, clean_env);
+  else execle(script, script, "--root", (char *)NULL, clean_env);
   return 1;
 }

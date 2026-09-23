@@ -3,15 +3,15 @@
 ## Scope
 
 The standalone AMD, NVIDIA, and Intel monitor packages share one interaction
-model. Each vendor page shows three primary sensor cards first; a `Show
-Console` checkbox below the cards reveals the matching interactive console.
+model. Each vendor page keeps the MSHELL Manager sensor-card layout; a `Show
+Console` checkbox in the toolbar reveals the matching console.
 The console is hidden and stopped by default.
 
 | Vendor | Sensor cards | Console |
 |---|---|---|
-| AMD | GPU utilization, temperature, VRAM/clock summary | `amdgpu_top` |
-| NVIDIA | GPU utilization, temperature, VRAM summary | `nvidia-smi` |
-| Intel | GPU utilization, frequency, temperature/power summary | `intel_gpu_top` |
+| AMD | Seven AMD DRM cards, in two columns | `amdgpu_top` |
+| NVIDIA | Eight NVML cards, in four columns | `nvidia-smi` |
+| Intel | Four Intel DRM cards, in four columns | `intel_gpu_top` |
 
 ## UI contract
 
@@ -28,21 +28,24 @@ The following behaviour is retained without redesign:
 - Console failures are shown in the page and never make the telemetry cards
   unavailable.
 
-The standalone pages must only change API URLs and package names. They must
-not create a second, divergent console implementation.
+The standalone pages adapt their collectors' flat JSON fields to the MSHELL
+card labels and reuse one shared console controller.
 
 The shared WebUI assets are `common/webui/gpu-console.css` and
 `common/webui/gpu-console.js`. A vendor page mounts one controller with its
 fixed `console.cgi` and console route URLs, then places the returned panel
-immediately below its sensor-card grid. This keeps the card layout and console
-behaviour identical across all three monitors.
+in the MSHELL-aligned layout: beside AMD's narrow sensor column, below the
+Intel and NVIDIA card grids.
 
 ## Runtime reuse
 
-The AMD and Intel console transport reuses MSHELL Manager's package-private
-`ttyd` instance, dedicated localhost ports, nginx WebSocket reverse-proxy
-locations, and request CGI that validates the DSM administrator session
-before starting or stopping the process. NVIDIA follows MSHELL Manager's
+The AMD and Intel console transport reuses MSHELL Manager's tested `ttyd`
+binary, dedicated loopback-only ports, nginx WebSocket reverse-proxy
+locations, and request CGI that validates the DSM administrator session and
+SynoToken before starting or stopping the process. On each start, the root
+helper creates a fresh 192-bit URL path and returns it only to the authorized
+CGI caller. An unauthenticated request to the predictable console base path
+receives 404. NVIDIA follows MSHELL Manager's
 existing text-console design: the toolbar toggle reveals an `nvidia-smi`
 output panel beneath the cards, and its output is refreshed with the telemetry.
 
@@ -53,15 +56,15 @@ this design.
 
 ## Binary policy
 
-- AMD: reuse the verified `syno-amdgpu-top` runtime archive and its private
-  libraries; do not rebuild it as part of every monitor UI change.
-- Intel: reuse the verified `syno-intel-gpu-top` runtime archive, including
+- AMD: reuse verified `syno-amdgpu-top` 0.1.1 runtime assets for both kernel
+  4.4.x and 5.10.55, including their private libdrm libraries.
+- Intel: reuse the verified `syno-intel-gpu-top` 0.1.2 runtime archive, including
   `intel_gpu_top.real` and its private libpci/libudev dependencies.
 - NVIDIA: invoke the installed driver’s `nvidia-smi` for the output panel; it
   is tied to the installed NVML/driver version and must not be bundled from an
   unrelated release.
-- `ttyd`: copy the tested MSHELL Manager binary for the supported DSM
-  x86_64 baseline and record its SHA-256 in the build manifest.
+- `ttyd`: copy the tested MSHELL Manager binary from the sibling local clone
+  (or `TTYD_SOURCE`) and verify its pinned SHA-256 at build time.
 
 Every imported runtime is copied into the package-private target tree and is
 selected by an absolute path. PATH lookup and system-wide replacement are
@@ -70,9 +73,11 @@ prohibited. The build records source URL, version, architecture, and SHA-256.
 ## Privilege and compatibility
 
 The console CGI is unprivileged and delegates only fixed `start`, `stop`, and
-`status` actions to the package’s narrowly scoped setuid helper, following the
-existing MSHELL Manager whitelist model. No caller-supplied command or path is
-accepted. Standard sensor collection remains read-only and request-driven.
+`status` actions to the package’s narrowly scoped setuid helper. The helper
+executes only root-owned package scripts and clears its inherited environment.
+No caller-supplied command or path is accepted. The ttyd process is read-only
+(`-W` is absent), bound to loopback, and exits when its last client disconnects.
+Standard sensor collection remains read-only and request-driven.
 
 The first implementation targets DSM x86_64. Kernel 5.10.55 and 4.4.x
 differences affect sensor availability, not the console layout. Unsupported

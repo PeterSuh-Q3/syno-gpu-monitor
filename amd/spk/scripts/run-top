@@ -1,0 +1,10 @@
+#!/bin/sh
+set -eu
+BASE=/var/packages/synology-amd-gpu-monitor/scripts/console-runtime
+case "$(uname -r)" in
+  4.*) RUNTIME="$BASE/kernel4" ;;
+  *) RUNTIME="$BASE/kernel5" ;;
+esac
+export LD_LIBRARY_PATH="$RUNTIME/lib"
+export LIBDRM_AMDGPU_IDS_PATH="$RUNTIME/share/libdrm/amdgpu.ids"
+exec "$RUNTIME/bin/amdgpu_top"

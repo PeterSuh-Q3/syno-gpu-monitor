@@ -4,16 +4,18 @@
 
 int main(int argc, char **argv) {
   const char *script;
+  const char *action = NULL;
+  char *const clean_env[] = {"PATH=/usr/sbin:/usr/bin:/sbin:/bin", "HOME=/", NULL};
   if (argc != 2) return 1;
-  if (strcmp(argv[1], "postinst") == 0) script = "postinst";
-  else if (strcmp(argv[1], "preuninst") == 0) script = "preuninst";
+  if (strcmp(argv[1], "postinst") == 0) script = "/var/packages/synology-intel-gpu-monitor/scripts/postinst";
+  else if (strcmp(argv[1], "preuninst") == 0) script = "/var/packages/synology-intel-gpu-monitor/scripts/preuninst";
+  else if (strcmp(argv[1], "console-start") == 0) { script = "/var/packages/synology-intel-gpu-monitor/scripts/console-control"; action = "start"; }
+  else if (strcmp(argv[1], "console-stop") == 0) { script = "/var/packages/synology-intel-gpu-monitor/scripts/console-control"; action = "stop"; }
+  else if (strcmp(argv[1], "console-status") == 0) { script = "/var/packages/synology-intel-gpu-monitor/scripts/console-control"; action = "status"; }
   else return 1;
   if (setuid(0) != 0) return 1;
-  /* Invoke one of two fixed package lifecycle scripts; no caller-supplied path. */
-  {
-    char path[128];
-    snprintf(path, sizeof(path), "/var/packages/synology-intel-gpu-monitor/scripts/%s", script);
-    execl(path, path, "--root", (char *)NULL);
-  }
+  /* Only fixed root-owned package scripts and actions are accepted. */
+  if (action != NULL) execle(script, script, action, (char *)NULL, clean_env);
+  else execle(script, script, "--root", (char *)NULL, clean_env);
   return 1;
 }

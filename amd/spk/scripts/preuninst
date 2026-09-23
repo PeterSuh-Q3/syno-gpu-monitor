@@ -1,2 +1,16 @@
 #!/bin/sh
+set -eu
+PKG=/var/packages/synology-amd-gpu-monitor
+HELPER="$PKG/target/bin/helper/amd-gpu-monitor-helper"
+if [ "${1:-}" != "--root" ]; then
+  [ -u "$HELPER" ] || exit 1
+  exec "$HELPER" preuninst
+fi
+if [ -x "$PKG/scripts/console-control" ]; then
+  "$PKG/scripts/console-control" stop >/dev/null || true
+fi
+LINK=/usr/syno/synoman/webman/3rdparty/SynoAmdGpuMonitor
+if [ -L "$LINK" ] && [ "$(readlink "$LINK")" = "$PKG/target/ui" ]; then
+  rm -f "$LINK"
+fi
 exit 0
