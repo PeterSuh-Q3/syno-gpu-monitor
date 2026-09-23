@@ -53,3 +53,8 @@ The UI should use the NVIDIA monitor's established 5-second refresh, 10-sample m
 ## Relationship to NVIDIA GPU Monitor
 
 The UI lifecycle, AppWindow registration, refresh/averaging policy, package safety rules, and release workflow are intentionally shared. The collector is vendor-specific: AMD uses sysfs/DRM/amdgpu_top rather than NVML, and must never assume NVENC/NVDEC terminology.
+
+The console portion is specified centrally in [GPU Console Integration
+Design](gpu-console-integration-design.md). The AMD page reuses MSHELL
+Manager's `Show Console` layout and starts an option-free `amdgpu_top` session
+through the package-private ttyd route.

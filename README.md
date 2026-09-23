@@ -11,3 +11,12 @@ The AMD monitor will follow the proven NVIDIA GPU Monitor model: a read-only DSM
 - `intel/` — reserved for Intel iGPU telemetry and monitor integration
 
 See [AMD GPU Monitor design](docs/amd-gpu-monitor-design.md).
+
+## Shared console design
+
+AMD, NVIDIA, and Intel monitors use the same card-plus-console interaction
+model. The standalone packages reuse MSHELL Manager's tested floating console
+implementation rather than introducing a second terminal UI. See
+[GPU Console Integration Design](docs/gpu-console-integration-design.md) for
+the exact `Show Console`, `ttyd`, nginx, privilege-helper, binary provenance,
+and cleanup contract.

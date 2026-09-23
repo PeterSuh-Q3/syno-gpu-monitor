@@ -70,3 +70,8 @@ same DSM AppWindow, icon sizes, and package lifecycle safety as AMD/NVIDIA.
 3. Add the shared floating WebUI/SPK framework and Intel-specific icon.
 4. Add optional engine metrics only after a stable DSM-exposed source is
    confirmed; do not make `intel_gpu_top` a package requirement.
+
+The Intel `Show Console` implementation follows the shared [GPU Console
+Integration Design](../../docs/gpu-console-integration-design.md) and reuses
+MSHELL Manager's ttyd/nginx/helper lifecycle. `intel_gpu_top` remains an
+optional console enhancement and is never required for installation.
