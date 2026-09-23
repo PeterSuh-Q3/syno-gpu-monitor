@@ -1,5 +1,5 @@
 package="syno-nvidia-gpu-monitor"
-version="0.6.2"
+version="0.6.3"
 displayname="Synology NVIDIA GPU Monitor"
 description="Read-only NVIDIA GPU, encoder, decoder, and memory telemetry monitor with a dedicated DSM panel."
 arch="x86_64"
