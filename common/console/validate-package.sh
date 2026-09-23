@@ -7,9 +7,13 @@ ROOT=${1:-}
 [ -f "$ROOT/package.tgz" ] || { echo "package.tgz missing" >&2; exit 1; }
 [ -f "$ROOT/scripts/postinst" ] || { echo "postinst missing" >&2; exit 1; }
 [ -f "$ROOT/scripts/preuninst" ] || { echo "preuninst missing" >&2; exit 1; }
-[ -x "$ROOT/target/console/console-control.sh" ] || { echo "console controller missing" >&2; exit 1; }
-[ -x "$ROOT/target/bin/ttyd" ] || { echo "ttyd missing" >&2; exit 1; }
-[ -f "$ROOT/target/ui/gpu-console.js" ] || { echo "shared WebUI controller missing" >&2; exit 1; }
-[ -f "$ROOT/target/ui/gpu-console.css" ] || { echo "shared WebUI stylesheet missing" >&2; exit 1; }
-sh -n "$ROOT/scripts/postinst" "$ROOT/scripts/preuninst" "$ROOT/target/console/console-control.sh"
+if [ -f "$ROOT/target/console/console-control.sh" ]; then
+  [ -x "$ROOT/target/bin/ttyd" ] || { echo "ttyd missing for ttyd console" >&2; exit 1; }
+  [ -f "$ROOT/target/ui/gpu-console.js" ] || { echo "shared WebUI controller missing" >&2; exit 1; }
+  [ -f "$ROOT/target/ui/gpu-console.css" ] || { echo "shared WebUI stylesheet missing" >&2; exit 1; }
+  sh -n "$ROOT/target/console/console-control.sh"
+elif [ -f "$ROOT/target/ui/console.cgi" ]; then
+  sh -n "$ROOT/target/ui/console.cgi"
+fi
+sh -n "$ROOT/scripts/postinst" "$ROOT/scripts/preuninst"
 echo "PASS: static package lifecycle files are present and syntactically valid"

@@ -21,13 +21,16 @@ The implementation is based on the tested MSHELL Manager flow in
 template is not a second terminal implementation; it is the extracted common
 parameterized layer to be called by each vendor package.
 
-Recommended fixed assignments:
+Recommended fixed assignments for the ttyd-backed vendor consoles:
 
 | Vendor | Port | Base path |
 |---|---:|---|
-| NVIDIA | 17681 | `nvidia-gpu-console` |
 | AMD | 17682 | `amdgpu-console` |
 | Intel | 17683 | `intel-gpu-console` |
+
+NVIDIA follows the MSHELL NVIDIA tab instead: a toolbar toggle reveals the
+formatted `nvidia-smi` output directly beneath the sensor cards. It does not
+need a ttyd process, proxy route, or setuid console action.
 
 The checked-in profiles under `profiles/` are package-owned constants, not
 user configuration. A package's privileged helper loads exactly one profile

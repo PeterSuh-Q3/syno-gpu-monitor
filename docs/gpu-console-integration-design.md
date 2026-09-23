@@ -39,11 +39,12 @@ behaviour identical across all three monitors.
 
 ## Runtime reuse
 
-The console transport is the same as MSHELL Manager: a package-private `ttyd`
-instance, a dedicated localhost port, an nginx WebSocket reverse-proxy
-location, and a request CGI that validates the DSM administrator session
-before starting or stopping the process. Each vendor gets its own port and
-PID/route namespace so consoles cannot terminate one another.
+The AMD and Intel console transport reuses MSHELL Manager's package-private
+`ttyd` instance, dedicated localhost ports, nginx WebSocket reverse-proxy
+locations, and request CGI that validates the DSM administrator session
+before starting or stopping the process. NVIDIA follows MSHELL Manager's
+existing text-console design: the toolbar toggle reveals an `nvidia-smi`
+output panel beneath the cards, and its output is refreshed with the telemetry.
 
 The lifecycle scripts must remove the route, stop the process, and restore any
 temporary state during uninstall or upgrade. No persistent telemetry daemon,
@@ -56,9 +57,9 @@ this design.
   libraries; do not rebuild it as part of every monitor UI change.
 - Intel: reuse the verified `syno-intel-gpu-top` runtime archive, including
   `intel_gpu_top.real` and its private libpci/libudev dependencies.
-- NVIDIA: invoke the installed driver’s `nvidia-smi` through a package-owned
-  `nvidia-smi -l 1` wrapper; it is tied to the installed NVML/driver version
-  and must not be bundled from an unrelated release.
+- NVIDIA: invoke the installed driver’s `nvidia-smi` for the output panel; it
+  is tied to the installed NVML/driver version and must not be bundled from an
+  unrelated release.
 - `ttyd`: copy the tested MSHELL Manager binary for the supported DSM
   x86_64 baseline and record its SHA-256 in the build manifest.
 

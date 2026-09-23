@@ -2,14 +2,14 @@
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 PACKAGE=syno-nvidia-gpu-monitor
-VERSION=0.6.4
+VERSION=0.6.5
 PLATFORM=x86_64
 IMAGE=${SYNOCOMPILER_IMAGE:-dante90/syno-compiler:7.4}
 CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
 WORK="$ROOT/work/$PACKAGE-$PLATFORM"
 OUT="$ROOT/dist"
 rm -rf "$WORK"
-mkdir -p "$WORK/target/bin/helper" "$WORK/target/ui/images" "$WORK/target/console" "$WORK/scripts" "$WORK/conf" "$WORK/webapi" "$OUT"
+mkdir -p "$WORK/target/bin/helper" "$WORK/target/ui/images" "$WORK/scripts" "$WORK/conf" "$WORK/webapi" "$OUT"
 docker run --rm --platform linux/amd64 --entrypoint /bin/bash -u 0 -v "$ROOT:/work" -w /work "$IMAGE" -lc "'$CC' -O2 -s -Wall -Wextra -Werror -o /work/work/$PACKAGE-$PLATFORM/target/bin/syno-nvidia-gpu-monitor /work/monitor-spk/src/syno-nvidia-gpu-monitor.c -ldl"
 docker run --rm --platform linux/amd64 --entrypoint /bin/bash -u 0 -v "$ROOT:/work" -w /work "$IMAGE" -lc "'$CC' -O2 -s -Wall -Wextra -Werror -o /work/work/$PACKAGE-$PLATFORM/target/bin/helper/monitor-helper /work/monitor-spk/src/monitor-helper.c"
 chmod 0755 "$WORK/target/bin/syno-nvidia-gpu-monitor"
@@ -21,15 +21,6 @@ cp "$ROOT/monitor-spk/conf/privilege" "$WORK/conf/privilege"
 cp "$ROOT/monitor-spk/webapi/SYNO.NvidiaGpuMonitor" "$WORK/webapi/"; chmod 0755 "$WORK/webapi/SYNO.NvidiaGpuMonitor"
 cp "$ROOT/monitor-spk/webui/"* "$WORK/target/ui/"; chmod 0755 "$WORK/target/ui/api.cgi"
 chmod 0755 "$WORK/target/ui/console.cgi"
-cp "$ROOT/../common/webui/gpu-console.css" "$WORK/target/ui/"
-cp "$ROOT/../common/webui/gpu-console.js" "$WORK/target/ui/"
-cp "$ROOT/../common/console/console-control.sh" "$WORK/target/console/"
-cp "$ROOT/../common/console/route.conf.template" "$WORK/target/console/"
-cp "$ROOT/monitor-spk/src/nvidia-smi-console.sh" "$WORK/target/console/"
-chmod 0755 "$WORK/target/console/nvidia-smi-console.sh"
-sed -e 's/@PACKAGE@/syno-nvidia-gpu-monitor/g' -e 's/@BASE_PATH@/nvidia-gpu-console/g' -e 's/@PORT@/17681/g' "$WORK/target/console/route.conf.template" > "$WORK/target/console/nvidia-console.conf"
-cp /Users/yousuk/mshell-manager/src/bin/ttyd "$WORK/target/bin/ttyd"
-chmod 0755 "$WORK/target/bin/ttyd" "$WORK/target/console/console-control.sh"
 cp "$ROOT/PACKAGE_ICON_256.PNG" "$WORK/target/ui/images/icon_256.png"
 cp "$ROOT/monitor-spk/INFO" "$WORK/INFO"
 for icon in PACKAGE_ICON.PNG PACKAGE_ICON_256.PNG; do cp "$ROOT/$icon" "$WORK/$icon"; done
