@@ -108,11 +108,14 @@
       };
     }
     function render(data) {
-      const telemetry = data.nvml || fallback(data);
+      // Standalone api.cgi returns the collector's flat JSON, while the
+      // original MSHELL endpoint returns {nvml,gpus}. Normalize both shapes
+      // so the MSHELL card layout remains unchanged.
+      const telemetry = data.nvml || (data.gpu_utilization !== undefined ? data : fallback(data));
       history.push(telemetry);
       if (history.length > 50) history.shift();
-      const gpu = data.gpus && data.gpus[0] || {};
-      const name = gpu.name || 'NVIDIA GPU';
+      const gpu = data.gpus && data.gpus[0] || data;
+      const name = gpu.name || data.name || 'NVIDIA GPU';
       gpuName.textContent = name;
       source.textContent = data.telemetrySource === 'nvml'
         ? 'NVML telemetry · 5-second refresh'
