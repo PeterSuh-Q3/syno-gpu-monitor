@@ -28,3 +28,8 @@ Recommended fixed assignments:
 | NVIDIA | 17681 | `nvidia-gpu-console` |
 | AMD | 17682 | `amdgpu-console` |
 | Intel | 17683 | `intel-gpu-console` |
+
+The checked-in profiles under `profiles/` are package-owned constants, not
+user configuration. A package's privileged helper loads exactly one profile
+selected at compile time and then executes `console-control.sh`; the WebUI CGI
+may select only `start`, `stop`, or `status`.
