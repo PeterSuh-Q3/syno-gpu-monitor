@@ -1,6 +1,157 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>NVIDIA GPU Monitor</title><link rel="stylesheet" href="gpu-console.css"></head><body><main><h1 style="display:flex;align-items:center;gap:10px"><img src="images/icon_256.png" width="32" height="32" alt="GPU">NVIDIA GPU Monitor</h1><p><small>NVML telemetry · 5-second refresh · 50-slot scrolling history</small></p><section class="grid" id="cards"></section></main><script src="gpu-console.js?v=__PKG_VERSION__"></script><script>
-const fields=[['gpu_utilization','GPU Utilization','%'],['gpu_memory_utilization','VRAM Utilization','%'],['encoder_utilization','NVENC Utilization','%'],['decoder_utilization','NVDEC Utilization','%'],['temperature_c','GPU Temperature','°C'],['fan_speed','Fan Speed','%'],['gpu_clock_mhz','GPU Clock','MHz'],['memory_clock_mhz','Memory Clock','MHz']],hist=[];
-function graph(c,vals){let x=c.getContext('2d'),w=c.width=c.clientWidth*2,h=c.height=c.clientHeight*2;x.clearRect(0,0,w,h);x.strokeStyle='#35d0ff';x.lineWidth=3;x.beginPath();vals.forEach((v,i)=>{let px=(50-vals.length+i)*w/49,py=h-(Math.min(100,Math.max(0,v))/100*h);i?x.lineTo(px,py):x.moveTo(px,py)});x.stroke()}
-async function refresh(){try{let d=await (await fetch('./api.cgi',{cache:'no-store'})).json();hist.push(d);if(hist.length>50)hist.shift();let used=(d.gpu_memory_used/1024).toFixed(0),total=(d.gpu_memory_total/1024).toFixed(0);cards.innerHTML=fields.map(([k,n,u])=>`<div class=card><small>${n}</small><div class=v>${k==='gpu_utilization'||k==='encoder_utilization'||k==='decoder_utilization'?Math.round(hist.reduce((s,z)=>s+Number(z[k]||0),0)/hist.length):(d[k]??'N/A')} ${u}${k==='gpu_memory_utilization'?`<br><small>${used} MiB / ${total} MiB</small>`:''}${k==='gpu_utilization'||k==='encoder_utilization'||k==='decoder_utilization'?`<canvas id="g-${k}"></canvas>`:''}</div></div>`).join('');['gpu_utilization','encoder_utilization','decoder_utilization'].forEach(k=>graph(document.getElementById('g-'+k),hist.map(z=>Number(z[k]||0))))}catch(e){cards.innerHTML='<div class=card>Telemetry unavailable</div>'}}refresh();setInterval(refresh,5000);
-const sharedConsole=GPUConsole.mount({actionUrl:'./console.cgi',consoleUrl:'/webman/3rdparty/syno-nvidia-gpu-monitor/nvidia-gpu-console/',title:'NVIDIA Console'});document.body.appendChild(sharedConsole.root);
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>NVIDIA Monitor</title>
+  <style>
+    :root { color-scheme: light; }
+    :root.dark { color-scheme: dark; }
+    * { box-sizing: border-box; }
+    body { margin: 0; padding: 4px; font: 13px system-ui, sans-serif; color: #1f2937; background: transparent; }
+    .toolbar { display: flex; align-items: center; justify-content: flex-end; gap: 12px; margin-bottom: 14px; }
+    button { border: 1px solid #2563eb; border-radius: 7px; padding: 7px 12px; color: #2563eb; background: transparent; font: inherit; font-weight: 600; cursor: pointer; }
+    .gpu-header { display: flex; align-items: center; gap: 11px; margin: 0 0 8px; }
+    .gpu-icon { font-size: 34px; line-height: 1; }
+    .gpu-name { color: #0f172a; font-size: 20px; font-weight: 700; line-height: 1.2; }
+    .grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .card { min-height: 118px; padding: 13px; border: 1px solid #f4d36d; border-radius: 10px; background: #fff8d9; }
+    .label { color: #64748b; font-size: 11px; }
+    .value { margin-top: 6px; color: #0f172a; font-size: 22px; font-weight: 650; line-height: 1.1; }
+    .detail { margin-top: 5px; color: #64748b; font-size: 11px; }
+    canvas { display: block; width: 100%; height: 32px; margin-top: 8px; }
+    .source { margin: 0 0 12px; color: #64748b; font-size: 11px; }
+    .console { margin-top: 14px; padding: 13px; border: 1px solid #dbe2ea; border-radius: 10px; background: #111827; color: #86efac; overflow: auto; }
+    pre { margin: 0; font: 11px ui-monospace, SFMono-Regular, Menlo, monospace; white-space: pre; }
+    .hidden { display: none; }
+    .error { padding: 20px; border: 1px solid #fecaca; border-radius: 10px; color: #b91c1c; background: #fef2f2; }
+    @media (max-width: 760px) { .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+    .dark body { color: #e5e7eb; }
+    .dark .gpu-name { color: #f9fafb; }
+    .dark .card { border-color: #8a6d1d; background: #4a3b09; }
+    .dark .label, .dark .detail, .dark .source { color: #9ca3af; }
+    .dark .value { color: #f9fafb; }
+    .dark .error { border-color: #7f1d1d; background: #450a0a; color: #fecaca; }
+  </style>
+</head>
+<body>
+  <div class="toolbar">
+    <label><input id="auto" type="checkbox" checked> Auto-refresh</label>
+    <button id="refresh" type="button">🔄 Refresh</button>
+    <label><input id="console-toggle" type="checkbox"> Show Console</label>
+  </div>
+  <header class="gpu-header"><span class="gpu-icon">🖼️</span><div class="gpu-name" id="gpu-name">NVIDIA GPU</div></header>
+  <p class="source" id="source">Loading NVIDIA telemetry…</p>
+  <section class="grid" id="cards"></section>
+  <section class="console hidden" id="console"><pre id="console-output"></pre></section>
+  <script src="syno-auth-shim.js?v=__PKG_VERSION__"></script>
+  <script>
+    const fields = [
+      ['gpu_utilization', 'GPU Utilization', '%', true],
+      ['gpu_memory_utilization', 'VRAM Utilization', '%', false],
+      ['encoder_utilization', 'NVENC Utilization', '%', true],
+      ['decoder_utilization', 'NVDEC Utilization', '%', true],
+      ['temperature_c', 'GPU Temperature', '°C', false],
+      ['fan_speed', 'Fan Speed', '%', false],
+      ['gpu_clock_mhz', 'GPU Clock', 'MHz', false],
+      ['memory_clock_mhz', 'Memory Clock', 'MHz', false]
+    ];
+    const history = [];
+    const cards = document.getElementById('cards');
+    const source = document.getElementById('source');
+    const gpuName = document.getElementById('gpu-name');
+    const consolePanel = document.getElementById('console');
+    const consoleOutput = document.getElementById('console-output');
+
+    function number(value) {
+      const parsed = Number(value);
+      return Number.isFinite(parsed) ? parsed : null;
+    }
+    function average(key) {
+      const values = history.map(sample => number(sample[key])).filter(value => value !== null);
+      return values.length ? Math.round(values.reduce((sum, value) => sum + value, 0) / values.length) : null;
+    }
+    function display(value, unit) {
+      return value === null || value === undefined ? 'N/A' : `${value} ${unit}`;
+    }
+    function graph(canvas, key) {
+      const context = canvas.getContext('2d');
+      const width = canvas.width = canvas.clientWidth * 2;
+      const height = canvas.height = canvas.clientHeight * 2;
+      context.clearRect(0, 0, width, height);
+      context.strokeStyle = '#35d0ff';
+      context.lineWidth = 2;
+      context.beginPath();
+      let started = false;
+      history.forEach((sample, index) => {
+        const value = number(sample[key]);
+        if (value === null) return;
+        const x = (50 - history.length + index) * width / 49;
+        const y = height - Math.min(100, Math.max(0, value)) / 100 * height;
+        if (started) context.lineTo(x, y); else { context.moveTo(x, y); started = true; }
+      });
+      if (started) context.stroke();
+    }
+    function fallback(data) {
+      const gpu = data.gpus && data.gpus[0] || {};
+      const used = number(gpu.memUsed);
+      const total = number(gpu.memTotal);
+      return {
+        gpu_utilization: number(gpu.utilization),
+        gpu_memory_utilization: used !== null && total ? Math.round(used * 100 / total) : null,
+        encoder_utilization: null,
+        decoder_utilization: null,
+        temperature_c: number(gpu.temp), fan_speed: number(gpu.fanSpeed),
+        gpu_clock_mhz: number(gpu.clockGraphics), memory_clock_mhz: number(gpu.clockMemory),
+        gpu_memory_used: used === null ? null : used * 1024,
+        gpu_memory_total: total === null ? null : total * 1024
+      };
+    }
+    function render(data) {
+      const telemetry = data.nvml || fallback(data);
+      history.push(telemetry);
+      if (history.length > 50) history.shift();
+      const gpu = data.gpus && data.gpus[0] || {};
+      const name = gpu.name || 'NVIDIA GPU';
+      gpuName.textContent = name;
+      source.textContent = data.telemetrySource === 'nvml'
+        ? 'NVML telemetry · 5-second refresh'
+        : 'nvidia-smi fallback · NVML is unavailable';
+      const used = number(telemetry.gpu_memory_used);
+      const total = number(telemetry.gpu_memory_total);
+      cards.innerHTML = fields.map(([key, label, unit, chart]) => {
+        const value = chart ? average(key) : number(telemetry[key]);
+        const detail = key === 'gpu_memory_utilization' && used !== null && total !== null
+          ? `${Math.round(used / 1024)} MiB / ${Math.round(total / 1024)} MiB` : '';
+        return `<article class="card"><div class="label">${label}</div><div class="value">${display(value, unit)}</div><div class="detail">${detail}</div>${chart ? `<canvas data-key="${key}"></canvas>` : ''}</article>`;
+      }).join('');
+      cards.querySelectorAll('canvas').forEach(canvas => graph(canvas, canvas.dataset.key));
+      consoleOutput.textContent = data.output || '';
+    }
+    async function refresh() {
+      try {
+        const response = await fetch('./api.cgi', { cache: 'no-store', credentials: 'same-origin' });
+        const data = await response.json();
+        if (!data.success) throw new Error(data.error || 'NVIDIA telemetry is unavailable');
+        render(data);
+      } catch (error) {
+        source.textContent = '';
+        cards.innerHTML = `<div class="error">Failed to load NVIDIA telemetry: ${error.message}</div>`;
+      }
+    }
+    document.getElementById('refresh').addEventListener('click', refresh);
+    document.getElementById('console-toggle').addEventListener('change', event => consolePanel.classList.toggle('hidden', !event.target.checked));
+    function syncTheme() {
+      try {
+        document.documentElement.classList.toggle('dark', window.parent.document.documentElement.classList.contains('dark'));
+      } catch (_) {
+        document.documentElement.classList.toggle('dark', localStorage.getItem('darkMode') === 'true');
+      }
+    }
+    syncTheme();
+    try { new MutationObserver(syncTheme).observe(window.parent.document.documentElement, { attributes: true, attributeFilter: ['class'] }); } catch (_) {}
+    refresh();
+    setInterval(() => { if (document.getElementById('auto').checked) refresh(); }, 5000);
+  </script>
+</body>
+</html>
