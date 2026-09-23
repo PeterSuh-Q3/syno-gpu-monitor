@@ -145,11 +145,26 @@
       }
     }
     document.getElementById('refresh').addEventListener('click', refresh);
+    let synoTokenPromise;
+    function getSynoToken() {
+      if (!synoTokenPromise) {
+        synoTokenPromise = fetch('/webman/login.cgi', { credentials: 'same-origin' })
+          .then(response => response.json())
+          .then(data => data.SynoToken || '')
+          .catch(() => '');
+      }
+      return synoTokenPromise;
+    }
     async function updateConsole() {
       try {
-        const response = await fetch('./console.cgi?action=output', { cache: 'no-store', credentials: 'same-origin' });
+        const token = await getSynoToken();
+        const response = await fetch('./console.cgi?action=output', {
+          cache: 'no-store', credentials: 'same-origin',
+          headers: token ? { 'X-SYNO-TOKEN': token } : {}
+        });
         const output = await response.text();
         if (!response.ok) throw new Error(output || 'Failed to read nvidia-smi output');
+        if (output.trim() === 'Unauthorized') throw new Error('DSM authentication failed. Reopen the monitor from DSM.');
         consoleOutput.textContent = output;
       } catch (error) {
         consoleOutput.textContent = 'NVIDIA Console unavailable: ' + error.message;
