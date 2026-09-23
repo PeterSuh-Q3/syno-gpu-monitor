@@ -33,3 +33,9 @@ The checked-in profiles under `profiles/` are package-owned constants, not
 user configuration. A package's privileged helper loads exactly one profile
 selected at compile time and then executes `console-control.sh`; the WebUI CGI
 may select only `start`, `stop`, or `status`.
+
+`validate-package.sh` performs non-destructive checks on an unpacked SPK work
+tree. After installation on DSM, `validate-console.sh` exercises start,
+status, stop, repeated stop, nginx validation, and cleanup. It is intended for
+upgrade, uninstall, and reboot regression checks; it does not alter DSM-owned
+files beyond the package's temporary console route.
