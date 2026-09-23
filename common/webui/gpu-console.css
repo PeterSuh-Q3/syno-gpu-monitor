@@ -1,0 +1,13 @@
+/* Shared by the AMD, NVIDIA, and Intel floating monitor pages. */
+.gpu-console-toolbar { display:flex; align-items:center; justify-content:flex-end; gap:12px; margin:14px 0; }
+.gpu-console-panel { margin-top:14px; padding:13px; border:1px solid #d1d5db; border-radius:10px; background:#f8fafc; }
+.gpu-console-panel h2 { margin:0 0 10px; color:#0f172a; font-size:16px; font-weight:700; }
+.gpu-console-frame { display:block; width:100%; height:560px; border:1px solid #374151; border-radius:8px; background:#000; }
+.gpu-console-placeholder { display:grid; place-items:center; min-height:560px; border:1px dashed #cbd5e1; border-radius:8px; color:#64748b; text-align:center; }
+.gpu-console-hidden { display:none !important; }
+.gpu-console-error { margin-top:10px; padding:12px; border:1px solid #fecaca; border-radius:8px; color:#b91c1c; background:#fef2f2; font-size:12px; }
+.dark .gpu-console-panel { border-color:#374151; background:#111827; }
+.dark .gpu-console-panel h2 { color:#f9fafb; }
+.dark .gpu-console-placeholder { border-color:#4b5563; color:#9ca3af; }
+.dark .gpu-console-error { border-color:#7f1d1d; background:#450a0a; color:#fecaca; }
+@media (max-width:760px) { .gpu-console-frame,.gpu-console-placeholder { min-height:420px; height:420px; } }

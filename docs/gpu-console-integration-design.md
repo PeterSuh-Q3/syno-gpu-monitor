@@ -31,6 +31,12 @@ The following behaviour is retained without redesign:
 The standalone pages must only change API URLs and package names. They must
 not create a second, divergent console implementation.
 
+The shared WebUI assets are `common/webui/gpu-console.css` and
+`common/webui/gpu-console.js`. A vendor page mounts one controller with its
+fixed `console.cgi` and console route URLs, then places the returned panel
+immediately below its sensor-card grid. This keeps the card layout and console
+behaviour identical across all three monitors.
+
 ## Runtime reuse
 
 The console transport is the same as MSHELL Manager: a package-private `ttyd`
