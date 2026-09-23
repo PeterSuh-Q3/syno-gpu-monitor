@@ -1,0 +1,51 @@
+#!/bin/sh
+set -eu
+PKG=/var/packages/synology-amd-gpu-monitor
+base="$(timeout 4 "$PKG/target/bin/amd-gpu-monitor" 2>/dev/null || true)"
+if ! printf '%s' "$base" | jq -e '.available == true' >/dev/null 2>&1; then
+    if printf '%s' "$base" | jq -e . >/dev/null 2>&1; then
+        printf '%s\n' "$base"
+    else
+        printf '%s\n' '{"vendor":"AMD","available":false,"reason":"AMD collector failed"}'
+    fi
+    exit 0
+fi
+
+card="$(printf '%s' "$base" | jq -r '.card // -1')"
+pci_path="$(readlink -f "/sys/class/drm/card$card/device" 2>/dev/null || true)"
+pci_addr="${pci_path##*/}"
+device="$(cat "/sys/class/drm/card$card/device/device" 2>/dev/null || true)"
+gpu_name="AMD GPU [1002:${device#0x}]"
+if [ -s /usr/sbin/pci.ids ]; then
+    case "$pci_addr" in
+        ????:??:??.?)
+            resolved="$(lspci -i /usr/sbin/pci.ids -nn -s "${pci_addr#????:}" 2>/dev/null | sed -n '1s/^.*: //;s/ \[1002:[[:xdigit:]]*\]//;s/ (rev [^)]*)$//;p' | head -n 1)"
+            case "$resolved" in
+                *'Advanced Micro Devices, Inc. [AMD/ATI]'*) gpu_name="$resolved" ;;
+            esac
+            ;;
+    esac
+fi
+
+used="$(printf '%s' "$base" | jq -r '.vram_used_mib // -1')"
+total="$(printf '%s' "$base" | jq -r '.vram_total_mib // -1')"
+vram_source=drm_sysfs
+if [ "$used" -lt 0 ] || [ "$total" -lt 0 ]; then
+    case "$(uname -r)" in 4.*) runtime=kernel4 ;; *) runtime=kernel5 ;; esac
+    root="$PKG/scripts/console-runtime/$runtime"
+    top="$root/bin/amdgpu_top"
+    if [ -x "$top" ]; then
+        top_json="$(LD_LIBRARY_PATH="$root/lib" LIBDRM_AMDGPU_IDS_PATH="$root/share/libdrm/amdgpu.ids" timeout 8 "$top" --json -n 1 2>/dev/null || true)"
+        top_vram="$(printf '%s' "$top_json" | jq -c --arg pci "$pci_addr" '[.devices[]? | select(.Info.DevicePath.pci == $pci) | .VRAM | {used: .["Total VRAM Usage"].value, total: .["Total VRAM"].value}] | first // empty' 2>/dev/null || true)"
+        if [ -n "$top_vram" ]; then
+            top_used="$(printf '%s' "$top_vram" | jq -r 'try (.used | tonumber) catch -1')"
+            top_total="$(printf '%s' "$top_vram" | jq -r 'try (.total | tonumber) catch -1')"
+            if [ "$used" -lt 0 ] && awk -v value="$top_used" 'BEGIN { exit !(value >= 0) }'; then used="$top_used"; vram_source=amdgpu_top; fi
+            if [ "$total" -lt 0 ] && awk -v value="$top_total" 'BEGIN { exit !(value >= 0) }'; then total="$top_total"; vram_source=amdgpu_top; fi
+        fi
+    fi
+fi
+
+printf '%s' "$base" | jq -c --arg gpu_name "$gpu_name" --arg vram_source "$vram_source" \
+    --argjson used "$used" --argjson total "$total" \
+    '.gpu_name = $gpu_name | .vram_used_mib = $used | .vram_total_mib = $total | .vram_source = $vram_source'

@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
   else if (strcmp(argv[1], "console-start") == 0) { script = "/var/packages/synology-amd-gpu-monitor/scripts/console-control"; action = "start"; }
   else if (strcmp(argv[1], "console-stop") == 0) { script = "/var/packages/synology-amd-gpu-monitor/scripts/console-control"; action = "stop"; }
   else if (strcmp(argv[1], "console-status") == 0) { script = "/var/packages/synology-amd-gpu-monitor/scripts/console-control"; action = "status"; }
+  else if (strcmp(argv[1], "telemetry") == 0) script = "/var/packages/synology-amd-gpu-monitor/scripts/telemetry";
   else { fputs("invalid action\n", stderr); return 1; }
   if (setuid(0) != 0) return 1;
   if (action != NULL) execle(script, script, action, (char *)NULL, clean_env);

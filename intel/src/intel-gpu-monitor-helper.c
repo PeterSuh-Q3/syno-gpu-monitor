@@ -12,6 +12,7 @@ int main(int argc, char **argv) {
   else if (strcmp(argv[1], "console-start") == 0) { script = "/var/packages/synology-intel-gpu-monitor/scripts/console-control"; action = "start"; }
   else if (strcmp(argv[1], "console-stop") == 0) { script = "/var/packages/synology-intel-gpu-monitor/scripts/console-control"; action = "stop"; }
   else if (strcmp(argv[1], "console-status") == 0) { script = "/var/packages/synology-intel-gpu-monitor/scripts/console-control"; action = "status"; }
+  else if (strcmp(argv[1], "telemetry") == 0) script = "/var/packages/synology-intel-gpu-monitor/scripts/telemetry";
   else return 1;
   if (setuid(0) != 0) return 1;
   /* Only fixed root-owned package scripts and actions are accepted. */

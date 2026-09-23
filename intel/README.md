@@ -1,6 +1,6 @@
 # Intel GPU Monitor
 
-`synology-intel-gpu-monitor` is a DSM 7+ x86_64 package for a self-contained Intel GPU telemetry window. It reads Intel DRM sysfs and hwmon nodes directly; `intel_gpu_top` is not bundled or required.
+`synology-intel-gpu-monitor` is a DSM 7+ x86_64 package for a self-contained Intel GPU telemetry window. It reads Intel DRM sysfs and hwmon nodes directly. The bundled `intel_gpu_top` is used as an optional GPU-power fallback; when no GPU temperature sensor exists, DSM system temperature is shown explicitly as a proxy rather than GPU die temperature.
 
 Build a package with Docker Desktop running:
 

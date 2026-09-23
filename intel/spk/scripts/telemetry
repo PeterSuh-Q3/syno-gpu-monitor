@@ -1,0 +1,55 @@
+#!/bin/sh
+set -eu
+PKG=/var/packages/synology-intel-gpu-monitor
+COLLECTOR="$PKG/target/bin/intel-gpu-monitor"
+TOP="$PKG/scripts/console-runtime/intel/bin/intel_gpu_top.real"
+LIB="$PKG/scripts/console-runtime/intel/lib"
+
+base="$(timeout 4 "$COLLECTOR" 2>/dev/null || true)"
+if ! printf '%s' "$base" | jq -e '.available == true' >/dev/null 2>&1; then
+    if printf '%s' "$base" | jq -e . >/dev/null 2>&1; then
+        printf '%s\n' "$base"
+    else
+        printf '%s\n' '{"vendor":"Intel","available":false,"reason":"Intel collector failed"}'
+    fi
+    exit 0
+fi
+
+power="$(printf '%s' "$base" | jq -r '.power_w // -1')"
+power_source=hwmon
+card="$(printf '%s' "$base" | jq -r '.card // -1')"
+device="$(printf '%s' "$base" | jq -r '.device_id // "unknown"')"
+gpu_name="Intel GPU [8086:$device]"
+if [ -s /usr/sbin/pci.ids ] && [ "$card" -ge 0 ] 2>/dev/null; then
+    pci_path="$(readlink -f "/sys/class/drm/card$card/device" 2>/dev/null || true)"
+    pci_addr="${pci_path##*/}"
+    case "$pci_addr" in
+        ????:??:??.?)
+            resolved="$(lspci -i /usr/sbin/pci.ids -s "${pci_addr#????:}" 2>/dev/null | sed -n '1s/^.*: Intel Corporation /Intel /;s/ (rev [^)]*)$//;p' | head -n 1)"
+            case "$resolved" in Intel\ *) gpu_name="$resolved" ;; esac
+            ;;
+    esac
+fi
+if [ -x "$TOP" ]; then
+    top_power="$(LD_LIBRARY_PATH="$LIB" timeout -s INT 3 "$TOP" -J 2>/dev/null | jq -r 'if type == "array" then (.[-1].power.GPU // -1) else -1 end' 2>/dev/null || true)"
+    if [ -n "$top_power" ] && awk -v value="$top_power" 'BEGIN { exit !(value >= 0) }'; then
+        power="$top_power"
+        power_source=intel_gpu_top
+    fi
+fi
+
+temp="$(printf '%s' "$base" | jq -r '.temperature_c // -1')"
+temp_source=hwmon
+if awk -v value="$temp" 'BEGIN { exit !(value < 0) }'; then
+    temp_source=unavailable
+    response="$(/usr/syno/bin/synowebapi --exec api=SYNO.Core.System method=info 2>/dev/null || true)"
+    proxy="$(printf '%s' "$response" | jq -r 'try (.data.sys_temp | tonumber) catch -1' 2>/dev/null || true)"
+    if [ -n "$proxy" ] && awk -v value="$proxy" 'BEGIN { exit !(value > 0) }'; then
+        temp="$proxy"
+        temp_source=dsm_system_proxy
+    fi
+fi
+
+printf '%s' "$base" | jq -c --argjson temp "$temp" --argjson power "$power" \
+    --arg temp_source "$temp_source" --arg power_source "$power_source" --arg gpu_name "$gpu_name" \
+    '.temperature_c = $temp | .power_w = $power | .temperature_source = $temp_source | .power_source = $power_source | .gpu_name = $gpu_name'

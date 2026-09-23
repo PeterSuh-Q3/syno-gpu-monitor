@@ -33,7 +33,7 @@
 </head>
 <body>
   <div class="toolbar"><label><input id="auto" type="checkbox" checked> Auto-refresh</label><button id="refresh" type="button">🔄 Refresh</button><span id="console-toggle-host"></span></div>
-  <header class="gpu-header"><span class="gpu-icon">🔵</span><div class="gpu-name">Intel GPU</div></header>
+  <header class="gpu-header"><span class="gpu-icon">🔵</span><div class="gpu-name" id="gpu-name">Intel GPU</div></header>
   <p class="source" id="source">Intel DRM telemetry · 5-second refresh</p>
   <section class="grid" id="cards"></section>
   <div id="console-host"></div>
@@ -64,6 +64,7 @@
       context.stroke();
     }
     function render(data) {
+      document.getElementById('gpu-name').textContent = data.gpu_name || `Intel GPU [8086:${data.device_id || 'unknown'}]`;
       const raw = number(data.gpu_utilization);
       if (raw !== null) {
         samples.push(raw); if (samples.length > 10) samples.shift();
@@ -73,8 +74,8 @@
       const metrics = [
         ['GPU Utilization', average, '%', '', true],
         ['GPU Clock', number(data.gpu_clock_mhz), 'MHz', number(data.gpu_max_clock_mhz) === null ? '' : `Maximum reported: ${data.gpu_max_clock_mhz} MHz`, false],
-        ['GPU Temperature', number(data.temperature_c), '°C', 'DRM hwmon sensor when exposed', false],
-        ['Power', number(data.power_w), 'W', 'Average board/package power when exposed', false]
+        [data.temperature_source === 'dsm_system_proxy' ? 'System Temperature' : 'GPU Temperature', number(data.temperature_c), '°C', data.temperature_source === 'dsm_system_proxy' ? 'DSM system sensor · proxy, not GPU die temperature' : 'GPU DRM hwmon sensor when exposed', false],
+        ['Power', number(data.power_w), 'W', data.power_source === 'intel_gpu_top' ? 'intel_gpu_top GPU power estimate' : 'DRM hwmon average when exposed', false]
       ];
       cards.innerHTML = metrics.map(([label, value, unit, detail, graph]) =>
         `<article class="card"><div class="label">${label}</div><div class="value">${display(value, unit)}</div><div class="detail">${detail}</div>${graph ? '<canvas></canvas>' : ''}</article>`

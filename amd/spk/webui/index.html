@@ -37,7 +37,7 @@
 </head>
 <body>
   <div class="toolbar"><label><input id="auto" type="checkbox" checked> Auto-refresh</label><button id="refresh" type="button">🔄 Refresh</button><span id="console-toggle-host"></span></div>
-  <div class="dashboard"><main class="gpu-column"><header class="gpu-header"><span class="gpu-icon">🔴</span><div class="gpu-name">AMD GPU</div></header><p class="source">AMD DRM telemetry · 5-second refresh</p><section class="grid" id="cards"></section></main><aside id="console-host"></aside></div>
+  <div class="dashboard"><main class="gpu-column"><header class="gpu-header"><span class="gpu-icon">🔴</span><div class="gpu-name" id="gpu-name">AMD GPU</div></header><p class="source">AMD DRM telemetry · 5-second refresh</p><section class="grid" id="cards"></section></main><aside id="console-host"></aside></div>
   <script src="gpu-console.js"></script>
   <script>
     const cards = document.getElementById('cards');
@@ -64,6 +64,7 @@
       context.stroke();
     }
     function render(data) {
+      document.getElementById('gpu-name').textContent = data.gpu_name || 'AMD GPU';
       const raw = number(data.gpu_utilization);
       if (raw !== null) {
         samples.push(raw); if (samples.length > 10) samples.shift();
