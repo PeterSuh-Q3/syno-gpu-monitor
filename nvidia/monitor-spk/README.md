@@ -1,4 +1,14 @@
-# Synology NVIDIA GPU Monitor — Phase 1
+# Synology NVIDIA GPU Monitor
+
+### Version 0.6.4
+
+- A DSM Resource Monitor GPU-mask patch is optional: if the DSM-specific
+  `resource.js` pattern is not recognized, installation continues without
+  modifying those DSM assets.
+- The standalone NVIDIA GPU Monitor remains available; only the optional DSM
+  Resource Monitor integration may be skipped.
+- When the known pattern is present, the patch is applied with a backup and
+  restored on uninstall.
 
 This SPK provides one read-only command and an optional UI
 experiment:
