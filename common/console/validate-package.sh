@@ -16,11 +16,12 @@ if [ -f "$ROOT/scripts/console-engine" ]; then
   [ -f "$ROOT/target/ui/gpu-console.js" ] || { echo "shared WebUI controller missing" >&2; exit 1; }
   [ -f "$ROOT/target/ui/gpu-console.css" ] || { echo "shared WebUI stylesheet missing" >&2; exit 1; }
   sh -n "$ROOT/scripts/console-engine" "$ROOT/scripts/console-control" "$ROOT/scripts/console-runtime/run-top" "$ROOT/target/ui/console.cgi"
-  if [ -d "$ROOT/scripts/console-runtime/kernel4" ]; then
-    [ -x "$ROOT/scripts/console-runtime/kernel4/bin/amdgpu_top" ] || { echo "kernel 4 amdgpu_top missing" >&2; exit 1; }
-    [ -x "$ROOT/scripts/console-runtime/kernel5/bin/amdgpu_top" ] || { echo "kernel 5 amdgpu_top missing" >&2; exit 1; }
+  if [ -d "$ROOT/scripts/console-runtime/amd" ]; then
+    [ -x "$ROOT/scripts/console-runtime/amd/bin/amdgpu_top" ] || { echo "amdgpu_top missing" >&2; exit 1; }
+    [ -s "$ROOT/scripts/console-runtime/amd/manifest.json" ] || { echo "AMDGPU runtime manifest missing" >&2; exit 1; }
   elif [ -d "$ROOT/scripts/console-runtime/intel" ]; then
     [ -x "$ROOT/scripts/console-runtime/intel/bin/intel_gpu_top.real" ] || { echo "intel_gpu_top missing" >&2; exit 1; }
+    [ -s "$ROOT/scripts/console-runtime/intel/manifest.json" ] || { echo "Intel runtime manifest missing" >&2; exit 1; }
   fi
 elif [ -f "$ROOT/target/ui/console.cgi" ]; then
   sh -n "$ROOT/target/ui/console.cgi"

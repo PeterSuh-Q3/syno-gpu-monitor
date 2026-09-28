@@ -56,19 +56,22 @@ this design.
 
 ## Binary policy
 
-- AMD: reuse verified `syno-amdgpu-top` 0.1.1 runtime assets for both kernel
-  4.4.x and 5.10.55, including their private libdrm libraries.
-- Intel: reuse the verified `syno-intel-gpu-top` 0.1.2 runtime archive, including
-  `intel_gpu_top.real` and its private libpci/libudev dependencies.
+- AMD: pin the single x86_64 `syno-amdgpu-top` 0.1.2 runtime archive,
+  including `amdgpu_top` and its private libdrm libraries. The package uses
+  the same userspace binary on supported kernel versions.
+- Intel: pin the single x86_64 `syno-intel-gpu-top` 0.1.3 runtime archive,
+  including `intel_gpu_top.real` and its private libpci/libudev dependencies.
 - NVIDIA: invoke the installed driver’s `nvidia-smi` for the output panel; it
   is tied to the installed NVML/driver version and must not be bundled from an
   unrelated release.
 - `ttyd`: copy the tested MSHELL Manager binary from the sibling local clone
   (or `TTYD_SOURCE`) and verify its pinned SHA-256 at build time.
 
-Every imported runtime is copied into the package-private target tree and is
-selected by an absolute path. PATH lookup and system-wide replacement are
-prohibited. The build records source URL, version, architecture, and SHA-256.
+Every imported runtime is copied into the package-private `scripts/console-runtime`
+tree and selected by an absolute path. PATH lookup and system-wide replacement
+are prohibited. The build pins the archive SHA-256, checks the embedded
+manifest's package, version, architecture, and per-file hashes, and retains
+the manifest alongside the runtime in the SPK.
 
 ## Privilege and compatibility
 

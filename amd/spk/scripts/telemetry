@@ -31,8 +31,7 @@ used="$(printf '%s' "$base" | jq -r '.vram_used_mib // -1')"
 total="$(printf '%s' "$base" | jq -r '.vram_total_mib // -1')"
 vram_source=drm_sysfs
 if [ "$used" -lt 0 ] || [ "$total" -lt 0 ]; then
-    case "$(uname -r)" in 4.*) runtime=kernel4 ;; *) runtime=kernel5 ;; esac
-    root="$PKG/scripts/console-runtime/$runtime"
+    root="$PKG/scripts/console-runtime/amd"
     top="$root/bin/amdgpu_top"
     if [ -x "$top" ]; then
         top_json="$(LD_LIBRARY_PATH="$root/lib" LIBDRM_AMDGPU_IDS_PATH="$root/share/libdrm/amdgpu.ids" timeout 8 "$top" --json -n 1 2>/dev/null || true)"

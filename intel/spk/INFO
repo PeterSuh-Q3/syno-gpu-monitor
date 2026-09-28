@@ -1,5 +1,5 @@
 package="synology-intel-gpu-monitor"
-version="0.3.1"
+version="0.3.2"
 displayname="Synology Intel GPU Monitor"
 description="Read-only Intel GPU telemetry monitor using DRM sysfs and hwmon."
 arch="x86_64"
