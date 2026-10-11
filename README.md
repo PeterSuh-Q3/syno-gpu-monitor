@@ -4,7 +4,7 @@ Read-only AMD, NVIDIA, and Intel GPU monitors for Synology DSM. Each package ope
 
 The screenshots below show the current tested UI. The SPK assets attached to older releases may not include every feature visible here.
 
-Download [AMD GPU Monitor 0.4.4](https://github.com/PeterSuh-Q3/syno-gpu-monitor/releases/tag/0.4.4), [Intel GPU Monitor 0.3.2](https://github.com/PeterSuh-Q3/syno-gpu-monitor/releases/tag/intel-monitor-0.3.2), or [NVIDIA GPU Monitor 0.6.5](https://github.com/PeterSuh-Q3/syno-gpu-monitor/releases/tag/gpu-monitors-2026.09.24) for the GPU in your NAS. The earlier unified release also contains AMD 0.4.3 and Intel 0.3.1.
+Download the latest [AMD 0.4.5, NVIDIA 0.6.6, and Intel 0.3.3 packages](https://github.com/PeterSuh-Q3/syno-gpu-monitor/releases/tag/gpu-monitors-2026.10.11) for the GPU in your NAS. These builds require DSM 7.2 or later.
 
 ## AMD GPU Monitor
 

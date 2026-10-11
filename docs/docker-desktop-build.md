@@ -1,33 +1,36 @@
 # macOS Docker Desktop Build Guide
 
-This repository builds the DSM x86_64 monitor packages with the Synology
-compiler image. The host does not need a Synology toolchain installed locally.
+This repository builds DSM x86_64 monitor packages with the Debian 12 native
+x86_64 builder used by the Intel GPU Top project. The monitor executables do
+not use a Synology platform cross-toolchain.
 
 ## Requirements
 
 - macOS with Docker Desktop running
 - Git checkout of `syno-gpu-monitor`
-- Docker Desktop Linux VM with at least 4 CPU cores and 8 GB RAM available
+- Docker Desktop Linux VM with amd64 emulation enabled
 - Docker Desktop File Sharing access for the repository directory
 - Network access to Docker Hub
 
 The build scripts default to:
 
 ```text
-dante90/syno-compiler:7.4
-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc
+dante90/syno-intel-gpu-top-builder:debian12-native
+/usr/bin/gcc
 ```
 
-The compiler runs inside the container and produces x86_64 DSM-compatible
-collectors and helpers. The host architecture does not change the target.
+The compiler runs inside an amd64 Debian 12 container and produces x86_64
+collectors and helpers. The image uses the DSM 7.4 glibc 2.36 baseline; the
+monitor sources currently require no newer GLIBC symbols. The host architecture
+does not change the target.
 
 ## Prepare Docker Desktop
 
 Start Docker Desktop and pull the compiler image once:
 
 ```sh
-docker pull dante90/syno-compiler:7.4
-docker image inspect dante90/syno-compiler:7.4
+docker pull dante90/syno-intel-gpu-top-builder:debian12-native
+docker image inspect dante90/syno-intel-gpu-top-builder:debian12-native
 ```
 
 On Apple Silicon, Docker Desktop must be allowed to run amd64 emulation. The
@@ -62,8 +65,8 @@ done
 To use another compiler image or compiler path without editing the scripts:
 
 ```sh
-SYNOCOMPILER_IMAGE=dante90/syno-compiler:7.4 \
-SYNOCOMPILER_CC=/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc \
+GPU_MONITOR_BUILDER_IMAGE=dante90/syno-intel-gpu-top-builder:debian12-native \
+GPU_MONITOR_CC=/usr/bin/gcc \
 (cd amd && ./scripts/build-spk.sh)
 ```
 

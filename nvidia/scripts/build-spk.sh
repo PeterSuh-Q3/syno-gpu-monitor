@@ -2,10 +2,10 @@
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 PACKAGE=syno-nvidia-gpu-monitor
-VERSION=0.6.5
+VERSION=0.6.6
 PLATFORM=x86_64
-IMAGE=${SYNOCOMPILER_IMAGE:-dante90/syno-compiler:7.4}
-CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
+IMAGE=${GPU_MONITOR_BUILDER_IMAGE:-dante90/syno-intel-gpu-top-builder:debian12-native}
+CC=${GPU_MONITOR_CC:-/usr/bin/gcc}
 WORK="$ROOT/work/$PACKAGE-$PLATFORM"
 OUT="$ROOT/dist"
 rm -rf "$WORK"

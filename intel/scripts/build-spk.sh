@@ -1,10 +1,10 @@
 #!/bin/sh
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-IMAGE=${SYNOCOMPILER_IMAGE:-dante90/syno-compiler:7.4}
-CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
+IMAGE=${GPU_MONITOR_BUILDER_IMAGE:-dante90/syno-intel-gpu-top-builder:debian12-native}
+CC=${GPU_MONITOR_CC:-/usr/bin/gcc}
 PACKAGE=synology-intel-gpu-monitor
-VERSION=0.3.2
+VERSION=0.3.3
 WORK="$ROOT/work/$PACKAGE"
 OUT=${SPK_OUTPUT_DIR:-"$ROOT/dist"}
 COMMON="$ROOT/../common/console"

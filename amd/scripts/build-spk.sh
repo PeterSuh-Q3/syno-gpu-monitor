@@ -1,9 +1,9 @@
 #!/bin/sh
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
-VERSION=0.4.4
-IMAGE=${SYNOCOMPILER_IMAGE:-dante90/syno-compiler:7.4}
-CC=${SYNOCOMPILER_CC:-/opt/epyc7002/bin/x86_64-pc-linux-gnu-gcc}
+VERSION=0.4.5
+IMAGE=${GPU_MONITOR_BUILDER_IMAGE:-dante90/syno-intel-gpu-top-builder:debian12-native}
+CC=${GPU_MONITOR_CC:-/usr/bin/gcc}
 WORK="$ROOT/work/synology-amd-gpu-monitor"
 OUT=${SPK_OUTPUT_DIR:-"$ROOT/dist"}
 COMMON="$ROOT/../common/console"
