@@ -1,3 +1,7 @@
+> **DSM Package Center source:** Add [https://nas.dante90.mmv.kr/](https://nas.dante90.mmv.kr/) in **Package Center → Settings → Package Sources** to browse compatible PeterSuh-Q3 packages.
+
+[![English DSM Package Center Community catalog showing PeterSuh-Q3 packages](docs/package-center-community-en.png)](https://nas.dante90.mmv.kr/)
+
 # Synology GPU Monitor
 
 Read-only AMD, NVIDIA, and Intel GPU monitors for Synology DSM. Each package opens a floating DSM window with sensor cards and an optional **Show Console** view. Telemetry is collected on demand; no persistent polling daemon is required.
