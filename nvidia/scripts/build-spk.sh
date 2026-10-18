@@ -2,12 +2,12 @@
 set -eu
 ROOT=$(CDPATH= cd -- "$(dirname "$0")/.." && pwd)
 PACKAGE=syno-nvidia-gpu-monitor
-VERSION=0.6.6
+VERSION=0.6.7
 PLATFORM=x86_64
 IMAGE=${GPU_MONITOR_BUILDER_IMAGE:-dante90/syno-intel-gpu-top-builder:debian12-native}
 CC=${GPU_MONITOR_CC:-/usr/bin/gcc}
 WORK="$ROOT/work/$PACKAGE-$PLATFORM"
-OUT="$ROOT/dist"
+OUT="${DIST_DIR:-$ROOT/dist}"
 rm -rf "$WORK"
 mkdir -p "$WORK/target/bin/helper" "$WORK/target/ui/images" "$WORK/scripts" "$WORK/conf" "$WORK/webapi" "$OUT"
 docker run --rm --platform linux/amd64 --entrypoint /bin/bash -u 0 -v "$ROOT:/work" -w /work "$IMAGE" -lc "'$CC' -O2 -s -Wall -Wextra -Werror -o /work/work/$PACKAGE-$PLATFORM/target/bin/syno-nvidia-gpu-monitor /work/monitor-spk/src/syno-nvidia-gpu-monitor.c -ldl"
